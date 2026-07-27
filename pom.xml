@@ -45,12 +45,18 @@
             <scope>compile</scope>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <!--      <artifactId>spring-boot-starter-web</artifactId> -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <scope>compile</scope>
         </dependency>
+         <!-- Source: https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+         <dependency>
+             <groupId>org.projectlombok</groupId>
+             <artifactId>lombok</artifactId>
+             <version>1.18.46</version>
+             <scope>compile</scope>
+         </dependency>
 
         <!-- Тестовые зависимости -->
         <dependency>

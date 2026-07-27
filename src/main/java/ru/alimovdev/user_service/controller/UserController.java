@@ -1,5 +1,6 @@
 package ru.alimovdev.user_service.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -61,6 +63,7 @@ public class UserController {
             User updated = userRepository.save(user);
             return ResponseEntity.ok(userMapper.toDto(updated));
         } else {
+            log.error("Entity not found: " + ResponseEntity.notFound().build());
             return ResponseEntity.notFound().build();
         }
     }
