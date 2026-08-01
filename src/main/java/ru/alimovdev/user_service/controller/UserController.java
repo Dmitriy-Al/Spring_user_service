@@ -9,11 +9,14 @@ import ru.alimovdev.user_service.api.UserDto;
 import ru.alimovdev.user_service.api.UserMapper;
 import ru.alimovdev.user_service.model.User;
 import ru.alimovdev.user_service.repository.UserRepository;
+import ru.alimovdev.user_service.service.KafkaProducerService;
 
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static ru.alimovdev.user_service.api.Event.*;
 
 @Slf4j
 @RestController
@@ -25,6 +28,9 @@ public class UserController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
 
     // GET /api/users/{id}
     @GetMapping("/{id}")
@@ -49,6 +55,8 @@ public class UserController {
         User user = userMapper.toNewEntity(userDto);
         user.setCreated_at(new Timestamp(System.currentTimeMillis()));
         User saved = userRepository.save(user);
+        // Отправление события в Kafka
+        kafkaProducerService.sendUserEvent(CREATE.getEvent(), saved.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(saved));
     }
 
@@ -73,8 +81,12 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (!userRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
+        } else {
+            String email = userRepository.findById(id).get().getEmail();
+            userRepository.deleteById(id);
+            // Отправление события в Kafka
+           kafkaProducerService.sendUserEvent(DELETE.getEvent(), email);
+            return ResponseEntity.noContent().build();
         }
-        userRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 }

@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class UserServiceApplication {
+public class  UserServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(UserServiceApplication.class, args);
@@ -12,9 +12,9 @@ public class UserServiceApplication {
 
 }
 
-/*
-Добавить в user-service поддержку Spring и разработать API, которое позволит управлять данными.
-Использовать необходимые модули spring(boot, web, data etc).
+/**
+Д.З.4 - Добавить в user-service поддержку Spring и разработать API, которое позволит
+управлять данными. Использовать необходимые модули spring(boot, web, data etc).
 Реализовать api для получения, создания, обновления и удаления юзера.
 Важно, entity не должен возвращаться из контроллера, необходимо использовать dto.
 Заменить Hibernate на Spring data JPA.

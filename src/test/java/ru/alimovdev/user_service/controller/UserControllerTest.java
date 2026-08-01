@@ -17,7 +17,6 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -113,8 +112,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.name").value("Alice"));
     }
 
+
     @Test
     void getAllUsers_shouldReturnListOfUsers() throws Exception {
+        // 1. Подготовка данных: создаём двух пользователей и соответствующие DTO
         User user1 = new User();
         user1.setId(1L);
         user1.setName("Fedya");
@@ -157,13 +158,14 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].id").value(2L))
                 .andExpect(jsonPath("$[1].name").value("Alice"));
 
-        // Проверка, что метод findAll() был вызван один раз
+
         verify(userRepository, times(1)).findAll();
     }
 
     @Test
     void updateUser_shouldReturnUpdatedUser_whenUserExists() throws Exception {
         Long userId = 1L;
+        // Существующий пользователь в БД (старые данные)
         User existingUser = new User();
         existingUser.setId(userId);
         existingUser.setName("OldName");
@@ -171,18 +173,22 @@ class UserControllerTest {
         existingUser.setAge(20);
         existingUser.setCreated_at(new Timestamp(System.currentTimeMillis() - 100000));
 
+        // DTO с новыми данными, которые приходят от клиента
         UserDto updateDto = new UserDto();
         updateDto.setName("NewName");
         updateDto.setEmail("new@example.com");
         updateDto.setAge(30);
 
+
+        // Обновлённый пользователь (после применения новых данных)
         User updatedUser = new User();
         updatedUser.setId(userId);
         updatedUser.setName("NewName");
         updatedUser.setEmail("new@example.com");
         updatedUser.setAge(30);
-        updatedUser.setCreated_at(existingUser.getCreated_at());
+        updatedUser.setCreated_at(existingUser.getCreated_at()); // created_at не меняется
 
+        // DTO, который вернётся клиенту
         UserDto responseDto = new UserDto();
         responseDto.setId(userId);
         responseDto.setName("NewName");
@@ -213,7 +219,9 @@ class UserControllerTest {
     @Test
     void deleteUser_shouldReturnNoContent_whenUserExists() throws Exception {
         Long userId = 1L;
+
         when(userRepository.existsById(userId)).thenReturn(true);
+
         mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNoContent()); // 204 No Content
 
@@ -224,13 +232,14 @@ class UserControllerTest {
     @Test
     void deleteUser_shouldReturnNotFound_whenUserDoesNotExist() throws Exception {
         Long userId = 99L;
+
         when(userRepository.existsById(userId)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNotFound()); // 404
+
         verify(userRepository, never()).deleteById(userId);
     }
-
 
 }
 

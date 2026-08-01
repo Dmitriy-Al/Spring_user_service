@@ -11,9 +11,7 @@ public class UserDto {
     private Integer age;
     private Timestamp created_at;
 
-
     public UserDto() {}
-
 
 }
 
