@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -113,6 +114,7 @@ class UserControllerTest {
     }
 
 
+    // ========== Тест для GET /api/users ==========
     @Test
     void getAllUsers_shouldReturnListOfUsers() throws Exception {
         // 1. Подготовка данных: создаём двух пользователей и соответствующие DTO
@@ -146,10 +148,17 @@ class UserControllerTest {
         dto2.setAge(25);
         dto2.setCreated_at(user2.getCreated_at());
 
+        // List<UserDto> dtos = Arrays.asList(dto1, dto2);
+
+        // 2. Настройка моков
+        // - Когда репозиторий.findAll() будет вызван, вернуть список пользователей
         when(userRepository.findAll()).thenReturn(users);
+        // - Для каждого пользователя при вызове маппера.toDto() возвращаем соответствующий DTO
+        //   Используем thenAnswer, чтобы для каждого элемента списка подставить свой DTO
         when(userMapper.toDto(user1)).thenReturn(dto1);
         when(userMapper.toDto(user2)).thenReturn(dto2);
 
+        // 3. Выполнение GET-запроса и проверка результата
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk()) // статус 200 OK
                 .andExpect(jsonPath("$.length()").value(2)) // в ответе массив из 2 элементов
@@ -158,12 +167,14 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].id").value(2L))
                 .andExpect(jsonPath("$[1].name").value("Alice"));
 
-
+        // 4. Проверяем, что метод findAll() был вызван ровно один раз
         verify(userRepository, times(1)).findAll();
     }
 
+    // ========== Тест для PUT /api/users/{id} (успешное обновление) ==========
     @Test
     void updateUser_shouldReturnUpdatedUser_whenUserExists() throws Exception {
+        // 1. Подготовка данных
         Long userId = 1L;
         // Существующий пользователь в БД (старые данные)
         User existingUser = new User();
@@ -178,7 +189,7 @@ class UserControllerTest {
         updateDto.setName("NewName");
         updateDto.setEmail("new@example.com");
         updateDto.setAge(30);
-
+        // id не передаём в теле, он в пути
 
         // Обновлённый пользователь (после применения новых данных)
         User updatedUser = new User();
@@ -196,11 +207,18 @@ class UserControllerTest {
         responseDto.setAge(30);
         responseDto.setCreated_at(existingUser.getCreated_at());
 
+        // 2. Настройка моков
+        // - Когда ищут пользователя по id, возвращаем существующего
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        // - Когда маппер преобразует DTO в сущность для обновления (toUpdatedEntity),
+        //   возвращаем объект с новыми данными (без id и created_at)
         when(userMapper.toUpdatedEntity(any(UserDto.class))).thenReturn(updatedUser);
+        // - Когда сохраняют обновлённого пользователя, возвращаем его же
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        // - Когда маппер преобразует сущность в DTO для ответа
         when(userMapper.toDto(updatedUser)).thenReturn(responseDto);
 
+        // 3. Выполнение PUT-запроса
         mockMvc.perform(put("/api/users/{id}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
@@ -210,34 +228,43 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email").value("new@example.com"))
                 .andExpect(jsonPath("$.age").value(30));
 
+        // 4. Проверяем, что методы вызывались корректно
         verify(userRepository, times(1)).findById(userId);
         verify(userMapper, times(1)).toUpdatedEntity(any(UserDto.class));
         verify(userRepository, times(1)).save(any(User.class));
         verify(userMapper, times(1)).toDto(updatedUser);
     }
 
+    // ========== Тест для DELETE /api/users/{id} (успешное удаление) ==========
     @Test
     void deleteUser_shouldReturnNoContent_whenUserExists() throws Exception {
         Long userId = 1L;
 
+        // Мокаем, что пользователь существует
         when(userRepository.existsById(userId)).thenReturn(true);
+        // Метод deleteById ничего не возвращает, его не нужно мокать
 
         mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNoContent()); // 204 No Content
 
+        // Проверяем, что deleteById был вызван ровно один раз с правильным id
         verify(userRepository, times(1)).deleteById(userId);
+        // Проверяем, что existsById был вызван ровно один раз
         verify(userRepository, times(1)).existsById(userId);
     }
 
+    // ========== Тест для DELETE /api/users/{id} (пользователь не найден) ==========
     @Test
     void deleteUser_shouldReturnNotFound_whenUserDoesNotExist() throws Exception {
         Long userId = 99L;
 
+        // Мокаем, что пользователь не существует
         when(userRepository.existsById(userId)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNotFound()); // 404
 
+        // Проверяем, что deleteById НЕ вызывался
         verify(userRepository, never()).deleteById(userId);
     }
 

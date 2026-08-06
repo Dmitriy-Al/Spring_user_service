@@ -23,14 +23,18 @@ import static ru.alimovdev.user_service.api.Event.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final UserRepository userRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
+    public UserController(UserRepository userRepository,
+                          UserMapper userMapper,
+                          KafkaProducerService kafkaProducerService) {
+        this.kafkaProducerService = kafkaProducerService;
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+    }
 
     // GET /api/users/{id}
     @GetMapping("/{id}")

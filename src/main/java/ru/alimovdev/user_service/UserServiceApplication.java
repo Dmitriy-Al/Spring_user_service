@@ -20,3 +20,5 @@ public class  UserServiceApplication {
 Заменить Hibernate на Spring data JPA.
 Написать тесты для API(можно делать это при помощи mockMvc или других средств)
  */
+
+

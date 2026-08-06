@@ -6,27 +6,25 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.alimovdev.user_service.api.UserEvent;
 
-
 @Slf4j
 @Service
 public class KafkaProducerService {
-
     // Имя топика, в который отправляем сообщения
     private static final String TOPIC = "user-events";
 
-    /*
-    KafkaTemplate — класс из модуля Spring для работы с Apache Kafka,
-    удобная обёртка (шаблон) вокруг нативного Kafka Producer.
-    Шаблон для отправки сообщений в Kafka (Key = String, Value = UserEvent)
-     */
-    @Autowired
-    private KafkaTemplate<String, UserEvent> kafkaTemplate;
+    /*   KafkaTemplate — класс из модуля Spring для работы с Apache Kafka,
+    удобная обёртка (шаблон) вокруг нативного Kafka Producer. Шаблон
+    для отправки сообщений в Kafka (Key = String, Value = UserEvent) */
+    private final KafkaTemplate<String, UserEvent> kafkaTemplate;
 
-    /*
-    Отправляет событие о пользователе в Kafka.
+    @Autowired
+    public KafkaProducerService(KafkaTemplate<String, UserEvent> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    /*    Отправляет событие о пользователе в Kafka.
     @param operation – тип операции: "CREATED" или "DELETED"
-    @param email – email пользователя, к которому относится событие
-     */
+    @param email – email пользователя, к которому относится событие    */
     public void sendUserEvent(String operation, String email) {
         // Создаём объект события
         UserEvent event = new UserEvent(operation, email);
