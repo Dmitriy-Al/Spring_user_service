@@ -21,3 +21,6 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+
+  cors:
+    allowed-origins: http:/localhost:3000,null

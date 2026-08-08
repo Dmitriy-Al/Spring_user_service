@@ -1,96 +1,98 @@
 package ru.alimovdev.user_service.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.alimovdev.user_service.api.UserDto;
-import ru.alimovdev.user_service.api.UserMapper;
-import ru.alimovdev.user_service.model.User;
-import ru.alimovdev.user_service.repository.UserRepository;
-import ru.alimovdev.user_service.service.KafkaProducerService;
-
-import java.sql.Timestamp;
+import ru.alimovdev.user_service.service.UserService;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static ru.alimovdev.user_service.api.Event.*;
-
-@Slf4j
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "API для управления пользователями")
+@Slf4j
 public class UserController {
 
-    private final UserMapper userMapper;
-    private final UserRepository userRepository;
-    private final KafkaProducerService kafkaProducerService;
+    // Переместил логику в UserService
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserRepository userRepository,
-                          UserMapper userMapper,
-                          KafkaProducerService kafkaProducerService) {
-        this.kafkaProducerService = kafkaProducerService;
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    // GET /api/users/{id}
+
+    @Operation(summary = "Получение пользователя по id",
+            description = "Возвращает информацию о пользователе по его идентификатору")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь найден",
+                    // content - явное указание для Swagger, что при успешном ответе (200) тело будет содержать UserDto
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
-        return userRepository.findById(id)
-                .map(userMapper::toDto)
+        return userService.getUser(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // GET /api/users
+
+    @Operation(summary = "Получение списка всех пользователей")
+    @ApiResponse(responseCode = "200", description = "Список пользователей",
+            content = @Content(schema = @Schema(implementation = UserDto.class)))
     @GetMapping
     public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
+        return userService.getAllUsers();
     }
 
-    // POST /api/users
+    @Operation(summary = "Добавление нового пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Пользователь создан",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "400", description = "Невалидные данные")
+    })
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
-        User user = userMapper.toNewEntity(userDto);
-        user.setCreated_at(new Timestamp(System.currentTimeMillis()));
-        User saved = userRepository.save(user);
-        // Отправление события в Kafka
-        kafkaProducerService.sendUserEvent(CREATE.getEvent(), saved.getEmail());
-        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(saved));
+    public ResponseEntity<UserDto> createUser(@RequestBody @Valid UserDto userDto) {
+        UserDto saved = userService.createUser(userDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // PUT /api/users/{id}
+
+    @Operation(summary = "Редактирование данных пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Данные обновлены",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "400", description = "Невалидные данные")
+    })
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = userMapper.toUpdatedEntity(userDto);
-            user.setId(id); // гарантия что id совпадет
-            user.setCreated_at(optionalUser.get().getCreated_at());
-            User updated = userRepository.save(user);
-            return ResponseEntity.ok(userMapper.toDto(updated));
-        } else {
-            log.error("Entity not found: " + ResponseEntity.notFound().build());
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody @Valid UserDto userDto) {
+        return userService.updateUser(id, userDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE /api/users/{id}
+
+    @Operation(summary = "Удалить пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Пользователь удалён"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        } else {
-            String email = userRepository.findById(id).get().getEmail();
-            userRepository.deleteById(id);
-            // Отправление события в Kafka
-           kafkaProducerService.sendUserEvent(DELETE.getEvent(), email);
+        if (userService.deleteUser(id)) {
             return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.notFound().build();
     }
 }

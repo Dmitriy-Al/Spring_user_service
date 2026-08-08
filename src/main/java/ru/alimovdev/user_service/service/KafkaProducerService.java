@@ -9,7 +9,7 @@ import ru.alimovdev.user_service.api.UserEvent;
 @Slf4j
 @Service
 public class KafkaProducerService {
-    // Имя топика, в который отправляем сообщения
+    // Имя топика, в который отправляются сообщения
     private static final String TOPIC = "user-events";
 
     /*   KafkaTemplate — класс из модуля Spring для работы с Apache Kafka,
