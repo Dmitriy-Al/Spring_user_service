@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 public class UserDto extends RepresentationModel<UserDto> {
 /*
 Наследование RepresentationModel позволяет UserDto хранить ссылки (links). После этого
-в контроллер вместо возврата простого DTO будет приходить DTO, обогащённый ссылками.
+в контроллер вместо возврата простого DTO будет приходить DTO с добавленными ссылками.
 */
 
     @Schema(description = "Уникальный идентификатор пользователя", example = "1")

@@ -16,10 +16,11 @@ import java.util.stream.Collectors;
 
 import static ru.alimovdev.user_service.api.Event.*;
 
+// Логика из контроллера переехала в сервис
 @Service
 @Transactional
 @Slf4j
-public class UserService { // Логика из контроллера переехала в сервис
+public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final KafkaProducerService kafkaProducerService;

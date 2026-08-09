@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "Users", description = "API для управления пользователями")
+@Tag(name = "Users", description = "API для управления пользователями")// Swagger получает заголовок с описанием класса
 @Slf4j
 public class UserController {
 
@@ -31,13 +31,13 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Получение пользователя по id",
-            description = "Возвращает информацию о пользователе по его идентификатору")
+    @Operation(summary = "Получение пользователя по id", // Swagger получает заглавие с функционалом метода
+            description = "Возвращает информацию о пользователе по его идентификатору") // Swagger получает описание функционала
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь найден",
-                    // content - явное указание для Swagger, что при успешном ответе (200) тело будет содержать UserDto
+                    // content - указание для Swagger, что при успешном ответе (200) тело будет содержать UserDto
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")  // кейс, когда пользователь не найден
     })
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUser(@PathVariable Long id) {

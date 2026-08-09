@@ -6,6 +6,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.alimovdev.user_service.api.UserEvent;
 
+/**
+ * Сервис-продюсер для отправки событий в Kafka.
+ * Используется в user-service для уведомления о создании или удалении пользователя.
+ */
 @Slf4j
 @Service
 public class KafkaProducerService {
