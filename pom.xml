@@ -31,8 +31,32 @@
         <!--  <junit-jupiter.version>5.11.0</junit-jupiter.version> -->
      </properties>
 
+    <!--Управление версиями -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Управление версиями Spring Cloud -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2025.1.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
      <dependencies>
-         <!-- Добавлено через initializer -->
+         <!-- Позволяет создать в проекте сервер Eureka, подключая не сам Netflix Eureka, а стартер от Spring Cloud -->
+         <!-- Этот стартер тянет за собой все необходимые библиотеки Netflix Eureka -->
+         <dependency>
+             <groupId>org.springframework.cloud</groupId>
+             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>com.netflix.eureka</groupId><!-- ??? -->
+             <artifactId>eureka-client-jersey3</artifactId>
+         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -68,7 +92,7 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.11</version>
-            <scope>compile</scope>
+            <scope>runtime</scope>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
         <dependency>
@@ -82,6 +106,12 @@
              <artifactId>lombok</artifactId>
              <version>1.18.46</version>
              <scope>compile</scope>
+         </dependency>
+
+         <!-- Настройка Config Clients -->
+         <dependency>
+             <groupId>org.springframework.cloud</groupId>
+             <artifactId>spring-cloud-starter-config</artifactId>
          </dependency>
 
         <!-- Тестовые зависимости -->
@@ -110,6 +140,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>4.1.0</version>
             </plugin>
         </plugins>
     </build>
