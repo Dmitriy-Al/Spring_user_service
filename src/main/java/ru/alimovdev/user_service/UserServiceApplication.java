@@ -10,6 +10,7 @@ public class  UserServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(UserServiceApplication.class, args);
+
     }
 }
 
@@ -37,4 +38,3 @@ External Configuration выносит все настройки приложен
 Иметь разные конфигурации для разных окружений (dev, test, prod).
 Хранить все настройки в одном месте.
 */
-
